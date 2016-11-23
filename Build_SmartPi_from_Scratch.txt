@@ -1,4 +1,6 @@
 Download Raspbian Jessie Lite from https://www.raspberrypi.org/downloads/raspbian/ and copy it on your SD card.
+Alternatively, you may use emonSD, a pre built SD card image including emoncms, openHAB, Node-Red and pimatic from here:
+https://github.com/openenergymonitor/emonpi/wiki/emonSD-pre-built-SD-card-Download-&-Change-Log
 
 > Expand Filesystem
 > Change user (pi) password
@@ -10,12 +12,25 @@ Update packet list and update packets
 	sudo apt-get upgrade
 
 Install additional packets
-Especially, "librrd-dev" is reuired to build SmartPi tools.
+Especially, "librrd-dev" is required to build SmartPi tools.
 	sudo apt-get install librrd-dev rrdtool git i2c-tools avahi-daemon
 
 Test if i2c is correctly enabled
 	i2cdetect -l
 	> i2c-1   i2c             20804000.i2c                            I2C adapter
+
+If the SMartPi module is installed on your RPI, you can test if it is detected properly.
+	i2cdetect -y 1
+should result in the following table:
+	     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+	00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	30: -- -- -- -- -- -- -- -- 38 -- -- -- -- -- -- -- 
+	40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+	70: -- -- -- -- -- -- -- --    
 
 Install go
 Download the archive and extract it into /usr/local, creating a Go tree in /usr/local/go.
@@ -28,10 +43,12 @@ Currently version 1.7.3 is up to date. You may need to adapt the filenamy accord
 Add "/usr/local/go/bin" to the PATH environment variable.
 You can do this by adding this line to your /etc/profile (for a system-wide installation) before the path is being exported.
 	PATH=$PATH:/usr/local/go/bin
+(You may need to logout and login in order to update your path variable accordingly.)
 
 Create a directory to contain your workspace and SmartPi git-repo, $HOME/SmartPi in this case,
 and set the GOPATH environment variable to point to that location.
 	$ export GOPATH=$HOME/SmartPi
+You should put the above command in your shell startup script ($HOME/.profile for example).
 
 Download of SmartPi sources
 	cd ~
@@ -40,16 +57,18 @@ Download of SmartPi sources
 Delete library folder of Smartpi git repository.
 We will create them again.
 (Caused problem on my rpi.)
-	rm ~/SmartPi/src/github.com
-	rm ~/SmartPi/src/golang.org
-	rm ~/SmartPi/src/gopkg.in
+	rm -R ~/SmartPi/src/github.com
+	rm -R ~/SmartPi/src/golang.org
+	rm -R ~/SmartPi/src/gopkg.in
 
 	go get github.com/gorilla/mux
 	go get github.com/nathan-osman/go-rpigpio
 	go get github.com/ziutek/rrd
 	go get gopkg.in/ini.v1
 	go get github.com/secsy/goftp
+	go get golang.org/x/exp/io/i2c
 
 build SmartPi tools
 	cd  ~/SmartPi
 	make
+If make was successful you find your newly built binaries in ~/SmartPi/bin
